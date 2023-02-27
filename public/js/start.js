@@ -104,18 +104,3 @@ vue_add_global_components(components_utils);
 /* add additional components */
   
 window.vue = new Vue( vue_options );
-
-function do_get(url, qs) {
-    var params = new URLSearchParams(qs);
-  
-    var params_str = params.toString();
-    var postfix = (params_str == "") ? "" : ((url.indexOf('?') >= 0) ? ('&' + params_str) : ('?' + params_str));
-    return fetch(url + postfix, {
-        method: 'GET',
-      })
-      .then((response) => {
-        if (!response.ok)
-          throw new Error('status is not 200');
-        return response.text();
-      });
-  }
