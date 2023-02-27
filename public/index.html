@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline'; style-src * 'unsafe-inline'; media-src *; img-src * data: content: blob:;">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="css/start.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spinkit/2.0.1/spinkit.min.css" />
+  <script src="js/methods_bootstrap.js"></script>
+  <script src="js/components_bootstrap.js"></script>
+  <script src="js/components_utils.js"></script>
+  <script src="js/vue_utils.js"></script>
+  <script src="js/gql_utils.js"></script>
+
+  <script src="js/remoteconsole.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vconsole/dist/vconsole.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuex@3.x/dist/vuex.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
+  
+  <title>YamaReco Viewer</title>
+</head>
+<body>
+<!--
+    <div id="loader-background">
+      <div class="sk-plane sk-center"></div>
+    </div>
+-->
+    <div id="top" class="container">
+        <h1>YamaReco Viewer</h1>
+        <hr>
+
+        <div class="form-inline">
+          <label>userId</label> <input type="text" class="form-control" v-model="userId" v-bind:readonly="rec_loaded"> 
+          <button class="btn btn-primary" v-on:click="yamareco_load" v-if="!rec_loaded">Load</button>
+          <span v-if="rec_loaded">
+            <label>ニックネーム</label> {{userinfo.nickname}}</label> <label>ユーザ名</label> {{userinfo.uname}}
+            <button class="btn btn-default" v-on:click="dialog_open('#user_detail')">詳細</button>
+          </span>
+        </div>
+        <br>
+
+        <div v-if="rec_loaded">
+          <div class="form-inline">
+            <label>山行記録リスト</label> <select class="form-control" v-on:change="yamareco_select(rec_selected)" v-model="rec_selected">
+              <option v-for="(item, index) in rec_list" v-bind:value="item.rec_id">
+                ({{index + 1}}) {{item.place}} {{item.start}}
+              </option>
+            </select>
+          </div>
+          <br>
+          <span v-if="rec_index >= 0">
+            <button class="btn btn-default btn-sm" v-on:click="dialog_open('#gpx_detail')">詳細</button>
+            <label>日程</label>:{{rec_list[rec_index].start}}<span v-if="rec_list[rec_index].start != rec_list[rec_index].end">～{{rec_list[rec_index].end}}</span>
+            <label>タイトル</label>:<a v-bind:href="rec_list[rec_index].page_url" target="_blank" rel="noopener noreferrer">{{rec_list[rec_index].place}}</a>
+            <span v-if="rec_list[rec_index].is_track!='1'"> (No GPS)</span>
+            <span v-else><label>距離</label>:{{(gpx_list[rec_index].get_distance() / 1000).toFixed(2)}} km</span>
+          </span>
+        </div>
+        <br>
+        <div id="mapcontainer" style="width:100%; height:70vh" class="img-thumbnail"></div>
+
+        <div class="modal fade" id="gpx_detail">
+          <div class="modal-dialog" v-if="rec_index >= 0">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">{{rec_list[rec_index].place}}</h4>
+              </div>
+              <div class="modal-body">
+                <img v-bind:src="rec_list[rec_index].thumb_url" class="img-thumbnail"><br>
+                <label>日程</label> {{rec_list[rec_index].start}}<span v-if="rec_list[rec_index].start != rec_list[rec_index].end">～{{rec_list[rec_index].end}}</span><br>
+                <label>エリア</label> {{rec_list[rec_index].area}}<br>
+                <label>詳細ページ</label> <a v-bind:href="rec_list[rec_index].page_url" target="_blank" rel="noopener noreferrer">{{rec_list[rec_index].place}}</a><br>
+                <span v-if="rec_list[rec_index].is_track=='1'">
+                  <br>
+                  <label>距離</label> {{(gpx_current.get_distance() / 1000).toFixed(2)}} km<br>
+                  <label>期間</label> {{new Date(gpx_current.get_start_time()).toLocaleString()}} ～ {{new Date(gpx_current.get_end_time()).toLocaleString()}}<br>
+                  <label>時間</label> {{(gpx_current.get_total_time() / 60000).toFixed(2)}} 分<br>
+                  <label>移動時間</label> {{(gpx_current.get_moving_time() / 60000).toFixed(2)}} 分<br>
+                  <label>移動ペース</label> {{(gpx_current.get_moving_pace() / 60000).toFixed(1)}} 分/km、{{gpx_current.get_moving_speed().toFixed(1)}} km/h<br>
+                </span>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-default" v-on:click="dialog_close('#gpx_detail')">閉じる</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal fade" id="user_detail">
+          <div class="modal-dialog modal-lg" v-if="userinfo">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">{{userinfo.uid}}</h4>
+              </div>
+              <div class="modal-body">
+                <img v-bind:src="userinfo.prof_bg" class="img-thumbnail"><br>
+                <label>uname</label> {{userinfo.uname}}<br>
+                <label>nickname</label> {{userinfo.nickname}}<br>
+                <label>profile</label> {{userinfo.profile}}<br>
+                <label>pref</label> {{userinfo.pref}}<br>
+                <label>address</label> {{userinfo.address}}<br>
+                <label>hobby</label> {{userinfo.hobby}}<br>
+                <label>page_url</label> <a v-bind:href="userinfo.page_url" target="_blank" rel="noopener noreferrer">HP</a><br>
+                <img v-bind:src="userinfo.avatar" class="img-thumbnail" width="150px" height="150px"><br>
+              </div>
+              <div class="modal-footer">
+                <button class="btn btn-default" v-on:click="dialog_close('#user_detail')">閉じる</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- for progress-dialog -->
+        <progress-dialog v-bind:title="progress_title"></progress-dialog>
+    </div>
+
+    <script src="js/store.js"></script>
+    <script src="js/start.js"></script>
+</body>
