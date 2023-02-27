@@ -3,7 +3,6 @@
 const HELPER_BASE = process.env.HELPER_BASE || "/opt/";
 const Response = require(HELPER_BASE + 'response');
 const TextResponse = require(HELPER_BASE + 'textresponse');
-const Redirect = require(HELPER_BASE + 'redirect');
 
 const base_url = "https://api.yamareco.com/api/v1";
 const base_url_gpx = "https://www.yamareco.com/modules/yamareco/";
