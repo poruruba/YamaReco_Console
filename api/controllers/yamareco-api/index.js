@@ -47,6 +47,7 @@ exports.handler = async (event, context, callback) => {
     if (event.path == '/yamareco-get-gpx') {
         var qs = event.queryStringParameters;
         console.log(qs);
+        
         var recId = qs.recId;
         var response = await do_get_text(base_url_gpx + "track-" + recId + '.gpx');
         return new TextResponse("application/gpx+xml", response);
